@@ -118,8 +118,8 @@ namespace Flights
 
             // Create a GraphicsOverlay to display a graphic for the selected dynamic entity in the scene view.
             var graphicsOverlayTrackEntity = new GraphicsOverlay();
-            var modelPath = @"C:\Code\ArcGISMapsSDK_ConsumeStreamService\3D\bristol.dae";
-            var plane3DSymbol = await ModelSceneSymbol.CreateAsync(new Uri(modelPath), 1.0);
+            var modelUri = new Uri(@".\3D\bristol.dae", UriKind.Relative);
+            var plane3DSymbol = await ModelSceneSymbol.CreateAsync(modelUri, 1.0);
             var rendererTrackEntity = new SimpleRenderer(plane3DSymbol);
 
             // Set a heading expression to orient the plane symbol with its heading.
