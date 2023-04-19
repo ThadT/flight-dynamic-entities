@@ -1,0 +1,143 @@
+﻿<Window x:Class="Flights.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:System.Windows.Controls;assembly=PresentationFramework"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        mc:Ignorable="d"
+        Width="800" Height="460"
+        Title="Dynamic entities">
+    <Window.Resources>
+        <controls:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <CollectionViewSource x:Key="sortedAirports" Source="{Binding CurrentAirports}">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+        <CollectionViewSource x:Key="sortedFlights" Source="{Binding DynamicEntityCollection}">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Attributes[ident]"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="240"/>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <!-- Left panel (airport selector and list). -->
+        <Grid Grid.Row="0" Grid.Column="0"
+              Margin="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100"/>
+                <RowDefinition Height="30"/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Button x:Name="StreamServiceConnectButton" 
+                        Grid.Row="0"
+                        Margin="3,9"
+                        Content="Connect to stream service"
+                        Click="StreamServiceConnectButton_Click"/>
+                <CheckBox x:Name="FilterWithExtentCheckBox" 
+                          Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                          Margin="3"
+                          Content="Filter to extent"
+                          HorizontalAlignment="Right"/>
+            </Grid>
+            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                       Foreground="DarkBlue" FontSize="14"
+                       HorizontalAlignment="Right" VerticalAlignment="Center"
+                       Margin="2"
+                       Text="Show flights to "/>
+            <ComboBox Grid.Row="1" Grid.Column="2"
+                      Foreground="DarkBlue" FontSize="14"
+                      HorizontalAlignment="Center" VerticalAlignment="Center"
+                      IsEditable="False" 
+                      MaxDropDownHeight="100"
+                      Margin="2" Width="60"
+                      ItemsSource="{Binding Source={StaticResource sortedAirports}}"
+                      SelectionChanged="SelectedDestinationChanged"/>
+            <ListBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                     Margin="5,10,5,10"
+                     ItemsSource="{Binding Source={StaticResource sortedFlights}}"
+                     SelectionMode="Single"
+                     SelectionChanged="SelectedFlightChanged"
+                     MouseDoubleClick="ZoomToDynamicEntity">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock>
+                            <Run Text="{Binding Attributes[ident]}"/>
+                            <Run Text=" (From "/>
+                            <Run Text="{Binding Attributes[orig]}"/>
+                            <Run Text=")"/>
+                        </TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <ListBox x:Name="FlightAttributesListBox" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
+                     Margin="5"
+                     ItemsSource="{Binding SelectedFlight.Attributes}"
+                     HorizontalContentAlignment="Stretch">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid HorizontalAlignment="Stretch">
+                            <TextBlock Text="{Binding Key}" FontWeight="Bold" VerticalAlignment="Center" Margin="5"/>
+                            <TextBlock Text="{Binding Value}" HorizontalAlignment="Right" Margin="5"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <!-- Primary map view. -->
+        <esri:MapView x:Name="MainMapView" 
+                      Grid.Row="1" Grid.Column="1"
+                      Margin="5"
+                      GeoViewTapped="MainMapView_Tapped"
+                      ViewpointChanged="MainMapView_ViewpointChanged"/>
+        <Border Grid.Row="1" Grid.Column="1"
+                Margin="20"
+                VerticalAlignment="Top" HorizontalAlignment="Left"
+                Opacity=".5" Background="LightGray">
+            <Canvas>
+                <TextBlock Foreground="navy" 
+                           FontSize="16" 
+                           FontWeight="Bold">
+                    <Run Text="Flights in the air:"/>
+                    <Run Text="{Binding DynamicEntityCount}"/>
+                </TextBlock>
+                <TextBlock x:Name="ConnectionStatusTextBlock"
+                           Margin="20"/>
+            </Canvas>
+        </Border>
+        <Grid Grid.Row="1" Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <!-- Scene view for tracking the selected entity -->
+            <esri:SceneView x:Name="TrackingSceneView"
+                        Grid.Row="0"
+                        Margin="5"/>
+            <!-- Map to show weather at the destination or origin. -->
+            <esri:MapView x:Name="WeatherMapView" Grid.Row="1"
+                      Margin="5"/>
+        </Grid>
+    </Grid>
+</Window>
